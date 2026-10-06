@@ -1,0 +1,22 @@
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  lua:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lua: ["5.1", "5.2", "5.3", "5.4", "luajit"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: ${{ matrix.lua }}
+      - name: Run suite
+        run: lua spec/run.lua
+      - name: Exercise CLI
+        run: |
+          LUA_PATH="./src/?.lua;./src/?/init.lua;;" lua bin/betacal --help
+          LUA_PATH="./src/?.lua;./src/?/init.lua;;" lua bin/betacal month 2027 1 --format csv

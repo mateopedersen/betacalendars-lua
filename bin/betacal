@@ -1,0 +1,70 @@
+#!/usr/bin/env lua
+local calendar = require("betacalendars")
+local date = require("betacalendars.date")
+
+local VERSION = "1.0.0"
+local function usage()
+  io.write("betacal " .. VERSION .. "\n" .. [[Usage:
+Usage:
+  betacal month YEAR MONTH [--week-start monday] [--format markdown|csv|json]
+  betacal year YEAR
+  betacal range YYYY-MM-DD YYYY-MM-DD
+  betacal boundaries YEAR
+  betacal --help
+  betacal --version
+]])
+end
+local function fail(message)
+  io.stderr:write("betacal: " .. message .. "\n")
+  os.exit(2)
+end
+local function number(value, label)
+  local n = tonumber(value)
+  if not n or n ~= math.floor(n) then fail(label .. " must be an integer") end
+  return n
+end
+local function parse_date(value)
+  local y, m, d = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
+  if not y then fail("date must use YYYY-MM-DD") end
+  local ok, result = pcall(date.validate, { year = tonumber(y), month = tonumber(m), day = tonumber(d) })
+  if not ok then fail(result) end
+  return result
+end
+local args = {}
+for _, value in ipairs(arg) do args[#args + 1] = value end
+if args[1] == "--help" or args[1] == "-h" or not args[1] then usage(); os.exit(args[1] and 0 or 2) end
+if args[1] == "--version" then io.write(VERSION .. "\n"); os.exit(0) end
+local ok, err = pcall(function()
+  if args[1] == "month" then
+    if not args[2] or not args[3] then fail("month requires YEAR and MONTH") end
+    local year, month, week_start, format = number(args[2], "year"), number(args[3], "month"), "monday", "markdown"
+    local i = 4
+    while i <= #args do
+      if args[i] == "--week-start" and args[i + 1] then week_start = args[i + 1]; i = i + 2
+      elseif args[i] == "--format" and args[i + 1] then format = args[i + 1]; i = i + 2
+      else fail("unknown or incomplete option " .. args[i]) end
+    end
+    local model = calendar.month_grid(year, month, { week_start = week_start, fixed_rows = true, overflow = false })
+    if format == "markdown" then io.write(calendar.export.markdown.month_grid(model) .. "\n")
+    elseif format == "csv" then io.write(calendar.export.csv.month_grid(model) .. "\n")
+    elseif format == "json" then io.write(calendar.export.json.encode(model) .. "\n")
+    else fail("format must be markdown, csv, or json") end
+  elseif args[1] == "year" then
+    if not args[2] or args[3] then fail("year requires exactly one YEAR") end
+    local year = number(args[2], "year")
+    local model = calendar.year_grid(year, { fixed_rows = true, overflow = false })
+    for month = 1, 12 do
+      io.write(string.format("%04d-%02d\n", year, month))
+      io.write(calendar.export.markdown.month_grid(model.months[month]) .. "\n\n")
+    end
+  elseif args[1] == "range" then
+    if not args[2] or not args[3] or args[4] then fail("range requires FROM and TO dates") end
+    for _, item in ipairs(calendar.date_range(parse_date(args[2]), parse_date(args[3]))) do io.write(date.iso_date(item) .. "\n") end
+  elseif args[1] == "boundaries" then
+    if not args[2] or args[3] then fail("boundaries requires exactly one YEAR") end
+    io.write(calendar.export.json.encode(calendar.boundary_report(number(args[2], "year"))) .. "\n")
+  else
+    fail("unknown command " .. tostring(args[1]))
+  end
+end)
+if not ok then fail(err) end

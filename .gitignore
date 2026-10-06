@@ -1,0 +1,4 @@
+*.rock
+*.src.rock
+*.all.rock
+.DS_Store
