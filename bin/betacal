@@ -2,11 +2,9 @@
 local calendar = require("betacalendars")
 local date = require("betacalendars.date")
 
-local VERSION = "1.0.0"
+local VERSION = "1.0.1"
 local function usage()
-  io.write("betacal " .. VERSION .. "\n" .. [[Usage:
-Usage:
-  betacal month YEAR MONTH [--week-start monday] [--format markdown|csv|json]
+  io.write("betacal " .. VERSION .. "\nUsage:\n" .. [[  betacal month YEAR MONTH [--week-start monday] [--format markdown|csv|json]
   betacal year YEAR
   betacal range YYYY-MM-DD YYYY-MM-DD
   betacal boundaries YEAR

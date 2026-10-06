@@ -18,5 +18,6 @@ jobs:
         run: lua spec/run.lua
       - name: Exercise CLI
         run: |
-          LUA_PATH="./src/?.lua;./src/?/init.lua;;" lua bin/betacal --help
+          help_output=$(LUA_PATH="./src/?.lua;./src/?/init.lua;;" lua bin/betacal --help)
+          test "$(printf '%s\n' "$help_output" | grep -c '^Usage:$')" -eq 1
           LUA_PATH="./src/?.lua;./src/?/init.lua;;" lua bin/betacal month 2027 1 --format csv

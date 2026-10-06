@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 — 2026-10-06
+
+### Fixed
+
+- Removed a repeated `Usage:` heading from `betacal --help`.
+
 ## 1.0.0 — 2026-10-06
 
 ### Added
